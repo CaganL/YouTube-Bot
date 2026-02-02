@@ -1,0 +1,35 @@
+name: YouTube Shorts Bot
+
+on:
+  workflow_dispatch: # Manuel çalıştırma butonu
+  schedule:
+    - cron: '0 10 * * *' # Her gün Türkiye saatiyle 13:00 civarı çalışır
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Depoyu Çek (Checkout)
+      uses: actions/checkout@v3
+
+    - name: Python Kur
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Gerekli Sistem Araçlarını Kur (ImageMagick)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y imagemagick
+        # MoviePy'nin yazı yazabilmesi için güvenlik izni ayarı
+        sudo sed -i 's/none/read,write/g' /etc/ImageMagick-6/policy.xml
+
+    - name: Kütüphaneleri Yükle
+      run: |
+        pip install -r requirements.txt
+
+    - name: Botu Çalıştır
+      env:
+        TOKEN_JSON: ${{ secrets.TOKEN_JSON }}
+      run: python main.py
