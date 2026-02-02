@@ -4,158 +4,143 @@ import json
 import requests
 import sys
 import asyncio
-import edge_tts  # YENİ SES MOTORU
+import edge_tts
 from datetime import datetime
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, vfx, ColorClip
 
-# --- HAFTALIK YAYIN AKIŞI (Takvim) ---
+# --- AYARLAR ---
 SCHEDULE = {
-    "Monday": {"topic": "KORKU", "video": "https://videos.pexels.com/video-files/5435649/5435649-hd_1080_1920_30fps.mp4"}, # Karanlık orman
-    "Tuesday": {"topic": "BILGI", "video": "https://videos.pexels.com/video-files/856193/856193-hd_1920_1080_24fps.mp4"}, # Uzay/Teknoloji
-    "Wednesday": {"topic": "MOTIVASYON", "video": "https://videos.pexels.com/video-files/3326656/3326656-hd_1920_1080_30fps.mp4"}, # Doğa/Deniz
-    "Thursday": {"topic": "BILGI", "video": "https://videos.pexels.com/video-files/854898/854898-hd_1920_1080_25fps.mp4"}, # Şehir/Trafik
+    "Monday": {"topic": "KORKU", "video": "https://videos.pexels.com/video-files/5435649/5435649-hd_1080_1920_30fps.mp4"},
+    "Tuesday": {"topic": "BILGI", "video": "https://videos.pexels.com/video-files/856193/856193-hd_1920_1080_24fps.mp4"},
+    "Wednesday": {"topic": "MOTIVASYON", "video": "https://videos.pexels.com/video-files/3326656/3326656-hd_1920_1080_30fps.mp4"},
+    "Thursday": {"topic": "BILGI", "video": "https://videos.pexels.com/video-files/854898/854898-hd_1920_1080_25fps.mp4"},
     "Friday": {"topic": "GIZEM", "video": "https://videos.pexels.com/video-files/5435649/5435649-hd_1080_1920_30fps.mp4"},
-    "Saturday": {"topic": "EGZOTIK", "video": "https://videos.pexels.com/video-files/4058447/4058447-hd_1080_1920_25fps.mp4"}, # Hayvanlar/Doğa
+    "Saturday": {"topic": "EGZOTIK", "video": "https://videos.pexels.com/video-files/4058447/4058447-hd_1080_1920_25fps.mp4"},
     "Sunday": {"topic": "GENEL", "video": "https://videos.pexels.com/video-files/856193/856193-hd_1920_1080_24fps.mp4"}
 }
 
-# --- İÇERİK HAVUZU (Gemini bağlanana kadar burası) ---
 CONTENT_POOL = {
     "KORKU": [
-        "1980'lerde bir kasabada tüm televizyonlar aynı anda kapandı. Ekranlarda sadece 'Arkanıza bakmayın' yazısı belirdi. O gece kasabada 50 kişi kayboldu ve bir daha asla bulunamadı.",
-        "Japonya'da kiralık bir daire tutan öğrenci, duvardaki küçük delikten yan daireyi izliyordu. Tek gördüğü kırmızılıktı. Ev sahibine sordu. Ev sahibi 'Orada hasta bir kadın yaşıyor, gözleri kırmızıdır' dedi."
+        "1980'lerde bir kasabada tüm televizyonlar aynı anda kapandı. Ekranlarda sadece 'Arkanıza bakmayın' yazısı belirdi. O gece 50 kişi kayboldu.",
+        "Evinizdeyken isminizin çağrıldığını duyarsanız sakın cevap vermeyin. Bazı inanışlara göre bu, sizi diğer tarafa çekmeye çalışan bir davettir."
     ],
     "BILGI": [
-        "Balinalar okyanusun dibinde şarkı söylerken sesleri o kadar güçlüdür ki, bu ses dalgaları 1000 kilometre öteden duyulabilir. Bir jet uçağından daha gürültülüdürler.",
-        "Eğer bir kağıdı 42 kez katlayabilseydiniz, kalınlığı Ay'a kadar ulaşırdı. Ancak fiziksel olarak bir kağıdı 7 kereden fazla katlamak neredeyse imkansızdır."
+        "Balinaların şarkıları okyanus altında bir jet uçağından daha yüksek ses çıkarabilir.",
+        "İnsan DNA'sı ile muz DNA'sı %50 oranında benzerlik gösterir."
     ],
-    "MOTIVASYON": [
-        "Vazgeçtiğin an, aslında başarmaya en yakın olduğun andır. Tıpkı gecenin en karanlık anının, şafaktan hemen öncesi olması gibi. Devam et.",
-        "Bugün ektiğin tohumlar, yarın gölgesinde oturacağın ağaçlar olacak. Yorulsan da durma."
-    ],
-    "GIZEM": [
-        "Voynich el yazması, 600 yıldır kimsenin çözemediği bir dilde yazılmıştır. Kitaptaki bitkilerin hiçbiri dünyada bulunmamaktadır.",
-        "Bermuda Şeytan Üçgeni'nde pusulalar kuzeyi göstermez. Manyetik alanın orada neden bozulduğunu bilim insanları hala tam olarak açıklayamıyor."
-    ],
-    "EGZOTIK": [
-        "Bukalemunların dilleri, vücutlarının iki katı uzunluğundadır ve bir jet uçağından daha hızlı fırlarlar.",
-        "Ahtapotların kollarında kendi beyinleri vardır. Bir kol kopsa bile hareket etmeye ve avlanmaya çalışır."
-    ],
-    "GENEL": [
-        "Tarihteki en kısa savaş sadece 38 dakika sürmüştür. İngiltere ve Zanzibar arasında geçen savaşta Zanzibar 38. dakikada teslim olmuştur."
-    ]
+    "MOTIVASYON": ["Başlamak için mükemmel olmayı bekleme, ama mükemmel olmak için başla.", "Yorulduğunda dinlenmeyi öğren, bırakmayı değil."],
+    "GIZEM": ["Voynich el yazması 600 yıldır çözülememiştir.", "Bermuda Şeytan Üçgeni'nde pusulalar sapıtır."],
+    "EGZOTIK": ["Ahtapotların üç kalbi vardır.", "Bukalemunların dilleri vücutlarından uzundur."],
+    "GENEL": ["Zürafaların ses telleri yoktur.", "Bal bozulmayan tek yiyecektir."]
 }
 
 def get_credentials():
     token_json = os.environ.get("TOKEN_JSON")
+    if not token_json:
+        print("HATA: TOKEN_JSON bulunamadı!")
+        sys.exit(1)
     creds_data = json.loads(token_json)
     return Credentials.from_authorized_user_info(creds_data)
 
-# --- YENİ PROFESYONEL SES FONKSİYONU ---
 async def generate_pro_voice(text, filename="voice.mp3"):
-    # "tr-TR-AhmetNeural" (Erkek) veya "tr-TR-EmelNeural" (Kadın) seçebilirsin
     communicate = edge_tts.Communicate(text, "tr-TR-AhmetNeural")
     await communicate.save(filename)
 
 def create_video_pro(text, background_url, topic):
     print(f"🎬 PRO Video hazırlanıyor... Konu: {topic}")
     
-    # 1. Profesyonel Sesi Oluştur
+    # 1. Ses
     asyncio.run(generate_pro_voice(text))
     audio = AudioFileClip("voice.mp3")
-    print(f"🎙️ Ses hazır! Süre: {audio.duration} sn")
     
-    # 2. Kaliteli Arka Plan İndir
-    print("📥 4K Video indiriliyor...")
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    r = requests.get(background_url, headers=headers, stream=True)
-    with open("background.mp4", 'wb') as f:
-        for chunk in r.iter_content(chunk_size=8192):
-            f.write(chunk)
-            
-    background = VideoFileClip("background.mp4")
+    # 2. Arka Plan İndirme (GÜVENLİ MOD)
+    print("📥 Video indiriliyor...")
+    video_downloaded = False
     
-    # 3. Görüntü Ayarları (Dikey ve Loop)
-    # Eğer video yataysa, ortadan dikey kes
-    if background.w > background.h:
-        # Tam ortadan 1080x1920 oranında kes
-        target_ratio = 9/16
-        new_width = background.h * target_ratio
-        crop_x = (background.w - new_width) / 2
-        background = background.crop(x1=crop_x, width=new_width, height=background.h)
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        r = requests.get(background_url, headers=headers, stream=True, timeout=15)
+        if r.status_code == 200:
+            with open("background.mp4", 'wb') as f:
+                for chunk in r.iter_content(chunk_size=1024*1024):
+                    f.write(chunk)
+            # Dosya boyutu kontrolü (100KB'dan küçükse bozuktur)
+            if os.path.getsize("background.mp4") > 100000:
+                video_downloaded = True
+            else:
+                print("⚠️ İndirilen dosya çok küçük (Bozuk).")
+    except Exception as e:
+        print(f"⚠️ İndirme hatası: {e}")
+
+    # 3. Video İşleme
+    if video_downloaded:
+        try:
+            background = VideoFileClip("background.mp4")
+            # Dikey yap
+            if background.w > background.h:
+                 background = background.crop(x1=background.w/2 - 270, width=540, height=960)
+            background = background.resize(height=1920)
+            background = background.crop(x1=background.w/2 - 540, width=1080, height=1920)
+            # Loop
+            background = background.fx(vfx.loop, duration=audio.duration + 1.5)
+        except Exception as e:
+            print(f"⚠️ Video işleme hatası: {e}. Yedek plana geçiliyor.")
+            video_downloaded = False
+
+    # EĞER VİDEO BOZUKSA -> SİYAH EKRAN KULLAN (Çökmemesi için)
+    if not video_downloaded:
+        print("🚨 Yedek Arka Plan Devrede (Siyah Ekran)")
+        background = ColorClip(size=(1080, 1920), color=(0, 0, 0), duration=audio.duration + 1.5)
+
+    # 4. Birleştir
+    video = background.set_duration(audio.duration + 1.5)
+    video = video.set_audio(audio)
     
-    background = background.resize(height=1920) # Yüksekliği 1920'ye sabitle
-    background = background.crop(x1=background.w/2 - 540, width=1080, height=1920) # 1080 genişlik garanti
-    
-    # Loop (Döngü)
-    background = background.fx(vfx.loop, duration=audio.duration + 1.5)
-    
-    # 4. Sesi Birleştir
-    video = background.set_audio(audio)
-    
-    # 5. Yazı (Daha Profesyonel Font ve Konum)
-    # Altyazıyı sarı ve siyah gölgeli yapalım
-    # Not: Türkçe karakter sorunu olmasın diye basit karakterler seçilebilir veya font yüklenmeli.
-    # Şimdilik temiz beyaz.
     txt_clip = TextClip("SONUNA KADAR IZLE!", fontsize=70, color='white', bg_color='red', 
                         size=(800, None), method='caption')
-    txt_clip = txt_clip.set_pos(('center', 200)).set_duration(video.duration)
+    txt_clip = txt_clip.set_pos(('center', 250)).set_duration(video.duration)
     
-    # 6. Render (Yüksek Kalite)
     final_video = CompositeVideoClip([video, txt_clip])
-    # bitrate="5000k" ile kaliteyi artırıyoruz
-    final_video.write_videofile("shorts_video.mp4", fps=30, bitrate="6000k", codec="libx264", audio_codec="aac")
+    # Hata almamak için preset='ultrafast' ekledik
+    final_video.write_videofile("shorts_video.mp4", fps=24, bitrate="5000k", codec="libx264", audio_codec="aac", preset='ultrafast')
     return "shorts_video.mp4"
 
-def upload_to_youtube(file_path, title, description, category_id="27"):
-    creds = get_credentials()
-    youtube = build('youtube', 'v3', credentials=creds)
-    
-    body = {
-        "snippet": {
-            "title": title,
-            "description": description,
-            "tags": ["shorts", "kesfet", "ilginc"],
-            "categoryId": category_id
-        },
-        "status": {
-            "privacyStatus": "public",
-            "selfDeclaredMadeForKids": False
-        }
-    }
-    
-    youtube.videos().insert(
-        part="snippet,status",
-        body=body,
-        media_body=MediaFileUpload(file_path)
-    ).execute()
-    print("✅ YÜKLEME TAMAMLANDI!")
+def upload_to_youtube(file_path, title, description):
+    try:
+        creds = get_credentials()
+        youtube = build('youtube', 'v3', credentials=creds)
+        
+        request = youtube.videos().insert(
+            part="snippet,status",
+            body={
+                "snippet": {
+                    "title": title,
+                    "description": description,
+                    "tags": ["shorts", "kesfet"],
+                    "categoryId": "27"
+                },
+                "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False}
+            },
+            media_body=MediaFileUpload(file_path)
+        )
+        response = request.execute()
+        print(f"✅ YÜKLEME BAŞARILI! Video ID: {response['id']}")
+    except Exception as e:
+        print(f"YouTube Hatası: {e}")
+        sys.exit(1)
 
 def main():
-    # 1. Bugün Günlerden Ne?
-    day_name = datetime.now().strftime("%A") # Monday, Tuesday...
-    print(f"📅 Bugün günlerden: {day_name}")
+    day_name = datetime.now().strftime("%A")
+    schedule = SCHEDULE.get(day_name, SCHEDULE["Sunday"])
+    text = random.choice(CONTENT_POOL.get(schedule["topic"], CONTENT_POOL["GENEL"]))
     
-    # 2. Programa göre konu seç
-    schedule_info = SCHEDULE.get(day_name, SCHEDULE["Sunday"]) # Bulamazsa Pazar'ı kullan
-    topic = schedule_info["topic"]
-    bg_video_url = schedule_info["video"]
+    video_file = create_video_pro(text, schedule["video"], schedule["topic"])
     
-    # 3. O konudan rastgele bir metin seç
-    text = random.choice(CONTENT_POOL.get(topic, CONTENT_POOL["GENEL"]))
-    
-    # 4. Video Yap
-    video_file = create_video_pro(text, bg_video_url, topic)
-    
-    # 5. Başlık Oluştur
-    title = f"{topic} ZAMANI! 😱 #shorts"
-    desc = f"Günün {topic} içerigi: {text[:50]}...\n\n#shorts #{topic.lower()}"
-    
-    # 6. Yükle
-    upload_to_youtube(video_file, title, desc)
+    title = f"{schedule['topic']} ZAMANI! 😱 #shorts"
+    upload_to_youtube(video_file, title, title)
 
 if __name__ == "__main__":
     main()
