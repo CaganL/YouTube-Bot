@@ -2,6 +2,6 @@ google-api-python-client
 google-auth-oauthlib
 google-auth-httplib2
 gTTS
-moviepy
+moviepy==1.0.3
 requests
 imageio-ffmpeg
