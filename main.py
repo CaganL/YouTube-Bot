@@ -11,118 +11,104 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, vfx, ColorClip
 
-# --- GELİŞMİŞ AYARLAR VE SAĞLAM LİNKLER ---
-# Not: Bugün PAZARTESİ olduğu için "KORKU" çalışacak.
+# --- GELİŞMİŞ PROGRAM (Linkler Güncellendi) ---
 SCHEDULE = {
-    "Monday":    {"topic": "KORKU", "title": "😱 KORKU SEANSI", "video": "https://cdn.pixabay.com/video/2020/05/25/40139-424930134_tiny.mp4"}, # Sisli Orman
-    "Tuesday":   {"topic": "BILGI", "title": "🧠 BEYİN YAKAN BİLGİ", "video": "https://cdn.pixabay.com/video/2019/04/20/22908-331626246_tiny.mp4"}, # Soyut Teknoloji
-    "Wednesday": {"topic": "MOTIVASYON", "title": "💪 GÜNÜN MOTİVASYONU", "video": "https://cdn.pixabay.com/video/2020/09/14/49983-460674957_tiny.mp4"}, # Gün batımı
-    "Thursday":  {"topic": "BILGI", "title": "🧠 BUNU BİLİYOR MUYDUN?", "video": "https://cdn.pixabay.com/video/2019/04/20/22908-331626246_tiny.mp4"},
-    "Friday":    {"topic": "GIZEM", "title": "🕵️‍♂️ GİZEM DOSYALARI", "video": "https://cdn.pixabay.com/video/2020/05/25/40139-424930134_tiny.mp4"},
-    "Saturday":  {"topic": "EGZOTIK", "title": "🦜 DOĞANIN MUCİZELERİ", "video": "https://cdn.pixabay.com/video/2020/09/14/49983-460674957_tiny.mp4"},
-    "Sunday":    {"topic": "GENEL", "title": "🤔 İLGİNÇ GERÇEKLER", "video": "https://cdn.pixabay.com/video/2019/04/20/22908-331626246_tiny.mp4"}
+    "Monday":    {"topic": "KORKU", "title": "😱 KORKU SEANSI", "video": "https://videos.pexels.com/video-files/5435649/5435649-hd_1080_1920_30fps.mp4"}, # Sisli Orman (Yedekli)
+    "Tuesday":   {"topic": "BILGI", "title": "🧠 BEYİN YAKAN BİLGİ", "video": "https://videos.pexels.com/video-files/3129671/3129671-hd_1080_1920_30fps.mp4"}, # Uzay/Soyut
+    "Wednesday": {"topic": "MOTIVASYON", "title": "💪 GÜNÜN MOTİVASYONU", "video": "https://videos.pexels.com/video-files/1536322/1536322-hd_1080_1920_30fps.mp4"}, # Dalgalar
+    "Thursday":  {"topic": "BILGI", "title": "🧠 BUNU BİLİYOR MUYDUN?", "video": "https://videos.pexels.com/video-files/3129671/3129671-hd_1080_1920_30fps.mp4"},
+    "Friday":    {"topic": "GIZEM", "title": "🕵️‍♂️ GİZEM DOSYALARI", "video": "https://videos.pexels.com/video-files/5435649/5435649-hd_1080_1920_30fps.mp4"},
+    "Saturday":  {"topic": "EGZOTIK", "title": "🦜 DOĞANIN MUCİZELERİ", "video": "https://videos.pexels.com/video-files/4549590/4549590-hd_1080_1920_30fps.mp4"}, # Doğa
+    "Sunday":    {"topic": "GENEL", "title": "🤔 İLGİNÇ GERÇEKLER", "video": "https://videos.pexels.com/video-files/3129671/3129671-hd_1080_1920_30fps.mp4"}
 }
 
-# --- UZUN VE SÜRÜKLEYİCİ İÇERİK HAVUZU ---
 CONTENT_POOL = {
     "KORKU": [
-        "Rusya'da 'Radyo İstasyonu UVB-76' adında gizemli bir frekans var. 40 yıldır, haftanın 7 günü, günün 24 saati sadece garip bir vızıltı sesi yayınlıyor. Ancak bazen, çok nadiren, vızıltı duruyor ve canlı bir Rus askeri sesi anlamsız kodlar okumaya başlıyor. Bu istasyonun amacı ne? Kıyamet günü silahı mı, yoksa sadece terk edilmiş bir şaka mı? Kimse bilmiyor ama yayın hiç durmuyor.",
-        "1990'larda Japonya'da yaşayan bir adam, evindeki yiyeceklerin sürekli kaybolduğundan şüphelenmeye başladı. Başta hafızasını kaybettiğini düşündü. Bir gün mutfağa gizli kamera yerleştirdi. Görüntüleri izlediğinde kanı dondu. Evde kimse yokken, mutfak dolabının en üst rafından yaşlı, tanımadığı bir kadın çıkıyor, yiyecekleri yiyor ve tekrar dolaba girip saklanıyordu. Kadının orada tam bir yıldır yaşadığı ortaya çıktı."
+        "Japonya'da, geceleri sokakta yürürken 'Ben güzel miyim?' diye soran maskeli bir kadına rastlarsanız sakın cevap vermeyin. Kuchisake-onna efsanesine göre, 'Evet' derseniz maskesini çıkarır ve 'Peki ya şimdi?' diye sorar. Hayır derseniz... Sonuç hiç iyi olmaz.",
+        "Evinizdeyken isminizin çağrıldığını duyarsanız ve evde yalnızsanız, sakın 'Efendim' demeyin veya o yöne gitmeyin. Bazı eski inanışlara göre bu, kötü niyetli varlıkların sizi kendi boyutlarına çekmek için kullandığı en eski tuzaktır."
     ],
     "BILGI": [
-        "Eğer bir kağıdı 42 kez ikiye katlayabilseydiniz, kalınlığı Dünya'dan Ay'a kadar ulaşırdı. Bu, üstel büyümenin korkutucu gücüdür. Ancak fiziksel olarak bir kağıdı 7 veya 8 kereden fazla katlamak neredeyse imkansızdır, çünkü her katlamada gereken enerji ve kağıdın gerilimi inanılmaz boyutlara ulaşır.",
-        "Balinaların okyanusun derinliklerinde söylediği şarkılar o kadar güçlüdür ki, ses dalgaları suyun altında bir jet uçağının kalkışından daha fazla desibele ulaşabilir. Bu sesler, okyanusun diğer ucundaki balinalar tarafından, binlerce kilometre öteden duyulabilir."
+        "Eğer Dünya'daki tüm insanlar aynı anda okyanusa girseydi, su seviyesi sadece bir saç teli kalınlığı kadar yükselirdi. Okyanuslar o kadar büyüktür ki, biz insanlar onlar için bir hiçiz.",
+        "Venüs gezegeninde bir gün, bir yıldan daha uzundur. Çünkü Venüs kendi etrafında o kadar yavaş döner ki, Güneş etrafındaki turunu tamamlaması daha kısa sürer."
     ],
     "MOTIVASYON": [
-        "Hayatınızdaki en zor dönemler, aslında sizi gelecekteki en güçlü halinize hazırlayan antrenmanlardır. Şu an içinde bulunduğunuz karanlık, bir tüneldir, bir kuyu değil. Yürümeye devam ederseniz mutlaka ışığı göreceksiniz. Vazgeçtiğiniz an, aslında başarmaya en yakın olduğunuz andır.",
-        "Bir bambu ağacı ekildiğinde, ilk 4 yıl boyunca toprağın üzerinde neredeyse hiçbir büyüme göstermez. Tüm enerjisini köklerini derinleştirmeye harcar. Ancak 5. yılda, sadece 6 hafta içinde 27 metre boya ulaşır. Sizin çabalarınız da böyledir. Sonuç göremiyorsanız durmayın, kök salıyorsunuz."
+        "Bambu ağacı ilk 4 yıl hiç büyümez, sadece kök salar. Beşinci yıl ise 6 haftada 27 metre uzar. Senin emeğin de boşa gitmiyor, sadece kök salıyorsun. Sabret ve izle.",
+        "Dünyanın en karanlık saati, güneş doğmadan hemen önceki saattir. Tam vazgeçmek üzere olduğun an, aslında zaferin sana en yakın olduğu andır. Devam et."
     ],
-    "GIZEM": ["Voynich el yazması, 15. yüzyıldan kalma, dünyadaki hiçbir dile benzemeyen bir dille ve tuhaf bitki çizimleriyle dolu bir kitaptır. Yüzlerce kriptolog, hatta yapay zeka bile bu kitabı çözmeyi denedi ama başarısız oldu. Kitabın uzaylılar tarafından mı, yoksa dahi bir şakacı tarafından mı yazıldığı hala büyük bir sır."],
-    "EGZOTIK": ["Bir ahtapotun üç kalbi ve dokuz beyni vardır. Ana beyne ek olarak, her kolun kendi küçük beyni bulunur. Bu sayede kollar, ana beyinden bağımsız kararlar alabilir. Hatta bir ahtapotun kolu kopsa bile, o kol bir süre daha hareket etmeye, avlanmaya ve yiyeceği olmayan bir ağıza götürmeye çalışır."],
-    "GENEL": ["Tarihteki en kısa savaş, 1896 yılında İngiltere ve Zanzibar arasında yaşanmıştır. Savaş sadece 38 dakika sürmüştür. İngiliz donanmasının gücünü gören Zanzibar sultanı, daha bir saat bile dolmadan teslim bayrağını çekmiştir."]
+    "GIZEM": ["Bermuda Şeytan Üçgeni'nde kaybolan gemilerin çoğu asla bulunamadı. Ancak ilginç olan, bölgedeki manyetik alanın pusulaları sürekli kuzeyden saptırmasıdır. Bilim insanları bunun altındaki devasa metan gazı yataklarından kaynaklanabileceğini düşünüyor."],
+    "GENEL": ["Ahtapotların üç kalbi vardır. Biri vücuda kan pompalar, diğer ikisi solungaçlara. Ayrıca kolları kopsa bile, o kollar bir süre daha hareket etmeye ve avlanmaya devam eder."]
 }
 
 def get_credentials():
     token_json = os.environ.get("TOKEN_JSON")
     if not token_json:
-        print("HATA: TOKEN_JSON bulunamadı!")
         sys.exit(1)
-    creds_data = json.loads(token_json)
-    return Credentials.from_authorized_user_info(creds_data)
+    return Credentials.from_authorized_user_info(json.loads(token_json))
 
+# --- SES AYARLARI (DAHA DOĞAL) ---
 async def generate_pro_voice(text, filename="voice.mp3"):
-    # Kaliteli ve tok bir ses
-    communicate = edge_tts.Communicate(text, "tr-TR-AhmetNeural")
+    # rate=+10% : Sesi %10 hızlandırır (Daha akıcı olur)
+    # pitch=-2Hz : Sesi biraz kalınlaştırır (Daha tok olur)
+    communicate = edge_tts.Communicate(text, "tr-TR-AhmetNeural", rate="+10%", pitch="-2Hz")
     await communicate.save(filename)
 
 def create_video_pro(text, background_url, title_text):
-    print(f"🎬 Sinema Modu Video Hazırlanıyor... Başlık: {title_text}")
+    print(f"🎬 Video Başlıyor: {title_text}")
     
-    # 1. Ses (Uzun)
+    # 1. Gelişmiş Ses Oluşturma
     asyncio.run(generate_pro_voice(text))
     audio = AudioFileClip("voice.mp3")
-    print(f"🎙️ Ses Süresi: {audio.duration} saniye")
+    print(f"🎙️ Ses Süresi: {audio.duration} sn")
     
-    # 2. Arka Plan İndirme (Daha Güvenli Linkler)
-    print("📥 Yüksek Kaliteli Video indiriliyor...")
+    # 2. Video İndirme (Daha Güçlü User-Agent)
+    print("📥 Video indiriliyor...")
     video_downloaded = False
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'Referer': 'https://www.pexels.com/'
+    }
+    
     try:
-        # Daha gerçekçi bir tarayıcı taklidi
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
-        r = requests.get(background_url, headers=headers, stream=True, timeout=30)
+        r = requests.get(background_url, headers=headers, stream=True, timeout=40)
         if r.status_code == 200:
             with open("background.mp4", 'wb') as f:
                 for chunk in r.iter_content(chunk_size=1024*1024):
                     f.write(chunk)
-            # Boyut kontrolü (En az 500KB olmalı)
             if os.path.getsize("background.mp4") > 500000:
                 video_downloaded = True
             else:
-                 print("⚠️ İndirilen dosya çok küçük (Bozuk olabilir).")
-        else:
-             print(f"⚠️ İndirme hatası, Sunucu Cevabı: {r.status_code}")
+                print("⚠️ Video dosyası çok küçük!")
     except Exception as e:
-        print(f"⚠️ İndirme hatası: {e}")
+        print(f"⚠️ İndirme Hatası: {e}")
 
-    # 3. Video İşleme
-    if video_downloaded:
-        try:
-            background = VideoFileClip("background.mp4")
-            # Eğer yataysa dikey yap
-            if background.w > background.h:
-                 # Ortadan dikey kesit al
-                 new_width = background.h * (9/16)
-                 background = background.crop(x_center=background.w/2, width=new_width, height=background.h)
-            
-            # 1080x1920 HD Kaliteye zorla
-            background = background.resize(height=1920)
-            background = background.crop(x_center=background.w/2, width=1080, height=1920)
-            
-            # Loop (Sese göre uzat)
-            background = background.fx(vfx.loop, duration=audio.duration + 1.5)
-            print("✅ Arka plan videosu başarıyla işlendi.")
-        except Exception as e:
-            print(f"⚠️ Video işleme hatası: {e}. Yedek plana geçiliyor.")
-            video_downloaded = False
-
-    # EĞER VİDEO YİNE BOZUKSA -> SİYAH EKRAN (Çökmemesi için son çare)
     if not video_downloaded:
-        print("🚨 DİKKAT: Video indirilemedi. Siyah ekran kullanılıyor.")
-        background = ColorClip(size=(1080, 1920), color=(0, 0, 0), duration=audio.duration + 1.5)
+        print("🚨 Video inemedi, Siyah Ekran kullanılıyor.")
+        background = ColorClip(size=(1080, 1920), color=(0, 0, 0), duration=audio.duration + 2)
+    else:
+        background = VideoFileClip("background.mp4")
+        # Dikey Kırpma (Merkezden)
+        if background.w > background.h:
+            bg_ratio = background.w / background.h
+            new_width = background.h * (9/16)
+            background = background.crop(x_center=background.w/2, width=new_width, height=background.h)
+        
+        background = background.resize(height=1920)
+        # Sadece orta kısmı al (Garanti 1080px)
+        background = background.crop(x_center=background.w/2, width=1080, height=1920)
+        background = background.fx(vfx.loop, duration=audio.duration + 2)
 
-    # 4. Birleştir ve Yazı Ekle
+    # 3. Birleştirme
     video = background.set_duration(audio.duration + 1.5)
     video = video.set_audio(audio)
     
-    # Dinamik Başlık (Konuya göre değişen)
-    txt_clip = TextClip(title_text, fontsize=65, color='white', bg_color='#cc0000', # Kırmızı arka planlı yazı
+    # Kırmızı Bantlı Başlık
+    txt_clip = TextClip(title_text, fontsize=70, color='white', bg_color='#cc0000', 
                         size=(900, None), method='caption', align='center')
-    # Yazıyı biraz daha yukarı alalım
-    txt_clip = txt_clip.set_pos(('center', 150)).set_duration(video.duration)
+    txt_clip = txt_clip.set_pos(('center', 200)).set_duration(video.duration)
     
     final_video = CompositeVideoClip([video, txt_clip])
-    # Yüksek kalite ayarları (Bitrate artırıldı)
-    final_video.write_videofile("shorts_video.mp4", fps=30, bitrate="8000k", codec="libx264", audio_codec="aac", preset='medium')
+    final_video.write_videofile("shorts_video.mp4", fps=24, bitrate="5000k", codec="libx264", audio_codec="aac", preset='medium')
     return "shorts_video.mp4"
 
 def upload_to_youtube(file_path, title, description, topic):
@@ -130,12 +116,8 @@ def upload_to_youtube(file_path, title, description, topic):
         creds = get_credentials()
         youtube = build('youtube', 'v3', credentials=creds)
         
-        # Kategoriye göre etiketler
-        tags = ["shorts", "kesfet", topic.lower()]
-        if topic == "KORKU": tags.extend(["korku", "paranormal", "gizem"])
-        if topic == "BILGI": tags.extend(["ilgincbilgiler", "bilim", "egitim"])
-
-        print(f"YouTube'a yükleniyor... Başlık: {title}")
+        tags = ["shorts", "kesfet", topic.lower(), "ilgincbilgiler", "gizem"]
+        
         request = youtube.videos().insert(
             part="snippet,status",
             body={
@@ -143,38 +125,31 @@ def upload_to_youtube(file_path, title, description, topic):
                     "title": title,
                     "description": description,
                     "tags": tags,
-                    "categoryId": "27" # Eğitim/Bilgi
+                    "categoryId": "27"
                 },
                 "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False}
             },
             media_body=MediaFileUpload(file_path)
         )
         response = request.execute()
-        print(f"✅ YÜKLEME BAŞARILI! Video ID: {response['id']}")
+        print(f"✅ YÜKLENDİ! Video ID: {response['id']}")
     except Exception as e:
-        print(f"YouTube Yükleme Hatası: {e}")
+        print(f"YouTube Hatası: {e}")
         sys.exit(1)
 
 def main():
-    # Bugünün ayarlarını getir (Pazartesi -> Korku)
     day_name = datetime.now().strftime("%A")
     schedule = SCHEDULE.get(day_name, SCHEDULE["Sunday"])
     
-    topic = schedule["topic"]
-    title_prefix = schedule["title"]
-    bg_video = schedule["video"]
+    # Rastgele bir metin seç
+    text = random.choice(CONTENT_POOL.get(schedule["topic"], CONTENT_POOL["GENEL"]))
     
-    # Uzun hikayeyi seç
-    text = random.choice(CONTENT_POOL.get(topic, CONTENT_POOL["GENEL"]))
+    video_file = create_video_pro(text, schedule["video"], schedule["title"])
     
-    # Videoyu oluştur
-    video_file = create_video_pro(text, bg_video, title_prefix)
+    title = f"{schedule['title']} | Bu Gerçek Mi? 😱 #shorts"
+    description = f"{text[:80]}...\n\nAbone ol: @GolgeArsiviTR\n\n#shorts #{schedule['topic'].lower()}"
     
-    # YouTube başlığı ve açıklaması
-    yt_title = f"{title_prefix} | İlginç Bir Hikaye #shorts"
-    description = f"{text[:80]}...\n\nDevamı videoda! Abone olmayı unutmayın.\n\n#shorts #{topic.lower()} #kesfet"
-    
-    upload_to_youtube(video_file, yt_title, description, topic)
+    upload_to_youtube(video_file, title, description, schedule["topic"])
 
 if __name__ == "__main__":
     main()
