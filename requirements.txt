@@ -5,3 +5,4 @@ gTTS
 moviepy==1.0.3
 requests
 imageio-ffmpeg
+Pillow==9.5.0
