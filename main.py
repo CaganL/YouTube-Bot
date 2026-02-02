@@ -6,6 +6,7 @@ import asyncio
 import edge_tts
 import textwrap
 import requests
+import time
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -14,10 +15,10 @@ from moviepy.audio.fx.all import volumex
 
 # --- İÇERİK HAVUZU ---
 STORIES = [
-    {"topic": "KORKU", "search_query": "scary forest fog dark spooky", "title": "😱 GECE YARISI MİSAFİRİ", "text": "Japon efsanesi Kuchisake-onna'ya göre, gece sisli bir sokakta yürürken maskeli bir kadın karşınıza çıkıp 'Ben güzel miyim?' diye sorarsa, sakın cevap vermeyin. 'Evet' derseniz maskesini çıkarır, yırtık ağzını gösterir ve 'Peki ya şimdi?' diye bağırır. 'Hayır' derseniz ise... Sizi oracıkta cezalandırır."},
-    {"topic": "BILGI", "search_query": "space galaxy planet stars abstract", "title": "🪐 VENÜS'ÜN TUHAF ZAMANI", "text": "Güneş sistemimizin en sıcak gezegeni Venüs'te zaman kavramı tam bir kaostur. Venüs kendi etrafında o kadar yavaş döner ki, bir Venüs günü, Dünya'daki 243 güne eşittir. Yani Venüs'te yaşıyor olsaydınız, bir gününüz bir yılınızdan daha uzun sürerdi."},
-    {"topic": "DENIZ", "search_query": "ocean waves storm underwater", "title": "🌊 OKYANUSUN GÜCÜ", "text": "Okyanuslar o kadar devasa ve derindir ki, insanlık olarak bizler sadece %5'ini keşfedebildik. Eğer şu an Dünya'daki tüm insanlar aynı anda okyanusa atlasaydı, su seviyesi sadece bir saç teli kalınlığı kadar yükselirdi. Okyanusun yanında biz bir hiçiz."},
-    {"topic": "ILGINC", "search_query": "dna microscopic science abstract", "title": "🍌 DNA BENZERLİĞİ", "text": "İnsan DNA'sı ile bir muzun DNA'sı %50 oranında birebir aynıdır. Yani genetik olarak yarı yarıya bir meyveyle akrabasınız. Doğanın mizah anlayışı gerçekten inanılmaz."}
+    {"topic": "KORKU", "search_query": "dark spooky forest fog", "title": "😱 GECE YARISI MİSAFİRİ", "text": "Japon efsanesi Kuchisake-onna'ya göre, gece sisli bir sokakta yürürken maskeli bir kadın karşınıza çıkıp 'Ben güzel miyim?' diye sorarsa, sakın cevap vermeyin. 'Evet' derseniz maskesini çıkarır, yırtık ağzını gösterir ve 'Peki ya şimdi?' diye bağırır. Hayır derseniz ise... Sizi cezalandırır."},
+    {"topic": "BILGI", "search_query": "space galaxy cinematic stars", "title": "🪐 VENÜS'ÜN TUHAF ZAMANI", "text": "Güneş sistemimizin en sıcak gezegeni Venüs'te zaman kavramı tam bir kaostur. Venüs kendi etrafında o kadar yavaş döner ki, bir Venüs günü, Dünya'daki 243 güne eşittir. Ancak Güneş etrafındaki turunu 225 günde tamamlar. Yani Venüs'te bir gün, bir yıldan daha uzundur!"},
+    {"topic": "DENIZ", "search_query": "deep ocean waves cinematic", "title": "🌊 OKYANUSUN GÜCÜ", "text": "Okyanuslar o kadar devasa ve derindir ki, insanlık olarak sadece yüzde beşini keşfedebildik. Eğer şu an dünyadaki sekiz milyar insanın tamamı aynı anda okyanusa atlasaydı, su seviyesi sadece bir saç teli kalınlığı kadar yükselirdi. Okyanusun yanında biz bir hiçiz."},
+    {"topic": "ILGINC", "search_query": "science dna laboratory abstract", "title": "🍌 DNA BENZERLİĞİ", "text": "Kendinizi çok özel hissediyor musunuz? İnsan DNA'sı ile bir muzun DNA'sı yüzde elli oranında birebir aynıdır. Yani genetik olarak yarı yarıya bir meyveyle akrabasınız. Doğanın mizah anlayışı gerçekten inanılmaz."}
 ]
 
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
@@ -50,9 +51,8 @@ def download_video_from_pexels(query):
 
 def get_random_music(topic):
     all_files = os.listdir(".")
-    matching_music = [f for f in all_files if f.endswith(".mp3") and topic.lower() in f.lower()]
-    if matching_music: return random.choice(matching_music)
-    return None
+    matching_music = [f for f in all_files if f.endswith(".mp3") and topic.lower() in f.lower() and f != "voice.mp3"]
+    return random.choice(matching_music) if matching_music else None
 
 def create_dynamic_subtitles(text, audio_duration):
     sentences = text.replace("?", ".").replace("!", ".").split(". ")
@@ -70,27 +70,52 @@ def create_dynamic_subtitles(text, audio_duration):
 
 def main():
     story_data = random.choice(STORIES)
+    print(f"🎬 Video İşleniyor: {story_data['title']}")
+    
     asyncio.run(generate_pro_voice(story_data['text']))
     voice_audio = AudioFileClip("voice.mp3")
+    
     video_path = download_video_from_pexels(story_data["search_query"])
     if not video_path: return
+    
     background = VideoFileClip(video_path)
-    if background.w > background.h: background = background.crop(x_center=background.w/2, width=background.h*9/16, height=background.h)
+    if background.w > background.h: 
+        background = background.crop(x_center=background.w/2, width=background.h*9/16, height=background.h)
+    
     background = background.resize(height=1920).crop(x_center=background.w/2, width=1080, height=1920).fx(vfx.loop, duration=voice_audio.duration + 2)
+    
     music_file = get_random_music(story_data["topic"])
     if music_file:
         music_audio = AudioFileClip(music_file).fx(vfx.loop, duration=voice_audio.duration + 2).fx(volumex, 0.15)
         final_audio = CompositeAudioClip([voice_audio, music_audio])
     else: final_audio = voice_audio
+    
     video = background.set_duration(voice_audio.duration + 1.5).set_audio(final_audio)
     title_clip = TextClip(story_data['title'], fontsize=70, color='white', bg_color='#cc0000', size=(900, None), method='caption', align='center').set_pos(('center', 150)).set_duration(video.duration)
     subtitle_clips = create_dynamic_subtitles(story_data['text'], voice_audio.duration)
-    final_video = CompositeVideoClip([video, title_clip] + subtitle_clips)
-    final_video.write_videofile("shorts_video.mp4", fps=30, bitrate="12000k", codec="libx264", audio_codec="aac")
     
-    creds = get_credentials()
-    youtube = build('youtube', 'v3', credentials=creds)
-    youtube.videos().insert(part="snippet,status", body={"snippet": {"title": f"{story_data['title']} #shorts", "description": story_data['text'], "categoryId": "27"}, "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False}}, media_body=MediaFileUpload("shorts_video.mp4")).execute()
-    print("✅ Yüklendi!")
+    output_file = "shorts_video.mp4"
+    final_video = CompositeVideoClip([video, title_clip] + subtitle_clips)
+    final_video.write_videofile(output_file, fps=24, bitrate="8000k", codec="libx264", audio_codec="aac")
+    
+    # Dosyanın oluştuğundan emin olmak için bekleme
+    time.sleep(5)
+    
+    if os.path.exists(output_file):
+        print(f"✅ Video hazır, YouTube'a yükleniyor...")
+        creds = get_credentials()
+        youtube = build('youtube', 'v3', credentials=creds)
+        youtube.videos().insert(
+            part="snippet,status", 
+            body={
+                "snippet": {"title": f"{story_data['title']} #shorts", "description": story_data['text'], "categoryId": "27"}, 
+                "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False}
+            }, 
+            media_body=MediaFileUpload(output_file)
+        ).execute()
+        print("🚀 Başarıyla Yüklendi!")
+    else:
+        print("🚨 HATA: shorts_video.mp4 oluşturulamadı!")
 
 if __name__ == "__main__": main()
+
