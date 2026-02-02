@@ -30,15 +30,18 @@ def get_credentials():
     return Credentials.from_authorized_user_info(creds_data)
 
 def download_background():
-    # Daha güvenilir, direkt bir video linki (Pixabay)
-    # Bot olduğumuzu anlamamaları için 'User-Agent' ekliyoruz (Kimlik gösteriyoruz)
-    url = "https://cdn.pixabay.com/video/2019/04/20/22908-331626246_tiny.mp4"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    # 1. SAĞLAM LİNK (Pexels - Dikey Video)
+    url = "https://videos.pexels.com/video-files/5977735/5977735-uhd_2160_3840_25fps.mp4"
+    
+    # Bot olduğumuzu gizlemek için kimlik (Header) ekliyoruz
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
     
     print("Arka plan videosu indiriliyor...")
     try:
         r = requests.get(url, headers=headers, stream=True)
-        r.raise_for_status() # Hata varsa programı durdur
+        r.raise_for_status()
         with open("background.mp4", 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
@@ -58,9 +61,9 @@ def create_video(text):
     # 2. Arka Planı Hazırla
     download_background()
     
-    # Dosya sağlam mı kontrol et
+    # Dosya boyutu kontrolü (Boş inerse hata verelim)
     if os.path.getsize("background.mp4") < 1000:
-        print("HATA: İndirilen video dosyası bozuk veya boş!")
+        print("HATA: İndirilen video dosyası boş!")
         sys.exit(1)
 
     try:
@@ -72,8 +75,8 @@ def create_video(text):
         
         # 3. Yazıyı Ekle
         # Basit, beyaz renkli, ortalanmış yazı
-        # Tablet/Bulut ortamında font sorunu olmaması için font='Arial' yerine varsayılanı kullanıyoruz.
-        txt_clip = TextClip(text, fontsize=45, color='white', bg_color='black', 
+        # Font sorununu önlemek için varsayılan fontu kullanıyoruz
+        txt_clip = TextClip(text, fontsize=50, color='white', bg_color='black', 
                             size=(video.w * 0.9, None), method='caption')
         txt_clip = txt_clip.set_pos('center').set_duration(video.duration)
         
@@ -110,7 +113,6 @@ def upload_to_youtube(file_path, title, description):
         )
         response = request.execute()
         print(f"✅ YÜKLEME BAŞARILI! Video ID: {response['id']}")
-        print(f"Video Linki: https://www.youtube.com/shorts/{response['id']}")
     except Exception as e:
         print(f"YouTube Yükleme Hatası: {e}")
         sys.exit(1)
@@ -119,8 +121,8 @@ def main():
     fact = random.choice(FACTS)
     video_file = create_video(fact)
     
-    title = f"Bunları Biliyor muydun? 😱 #shorts"
-    description = f"İlginç bilgiler serisi: {fact}\n\n#shorts #bilgi #ilgincbilgiler"
+    title = f"Bunları Biliyor muydun? 😲 #shorts"
+    description = f"İlginç bilgiler: {fact}\n\n#shorts #bilgi"
     
     upload_to_youtube(video_file, title, description)
 
