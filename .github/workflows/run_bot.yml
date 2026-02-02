@@ -3,7 +3,7 @@ name: YouTube Shorts Bot
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 10 * * *' # Her gün Türkiye saatiyle 13:00'de çalışır
+    - cron: '0 10 * * *'
 
 jobs:
   build:
@@ -27,7 +27,8 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: |
           python -m pip install --upgrade pip
-          pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib requests moviepy edge-tts
+          pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib requests edge-tts
+          pip install moviepy==1.0.3
 
       - name: Botu Çalıştır
         env:
